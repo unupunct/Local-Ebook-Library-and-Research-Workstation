@@ -1,4 +1,7 @@
-PySide6-Essentials>=6.7
+# PySide6 6.12.0 has a reference-counting bug on Python < 3.12 (every void call decrements None; the process aborts after
+# a few minutes of GUI use on Debian 12 / ParrotOS 6 with Python 3.11), so older Python gets the last good series.
+PySide6-Essentials>=6.7,<6.12; python_version < "3.12"
+PySide6-Essentials>=6.7; python_version >= "3.12"
 PyMuPDF>=1.24,<2
 beautifulsoup4>=4.12
 lxml>=5.0

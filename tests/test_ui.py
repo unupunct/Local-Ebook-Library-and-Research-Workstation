@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 import pytest
@@ -217,3 +218,15 @@ def test_badges_drag_drop_and_research_state(app, win):
     r.query.clear()
     r._restore_state()
     assert r.query.text() == "zanzibarium"
+
+
+@pytest.mark.skipif(sys.version_info >= (3, 12), reason="None is immortal on 3.12+, so the leak cannot be observed")
+def test_pyside6_does_not_corrupt_none_refcount(app):
+    """PySide6 6.12.0 on Python < 3.12 decrements None's refcount on every void call and eventually aborts the process."""
+    for _ in range(10):
+        app.processEvents()
+    before = sys.getrefcount(None)
+    for _ in range(300):
+        app.processEvents()
+    import PySide6
+    assert sys.getrefcount(None) - before > -10, f"PySide6 {PySide6.__version__} corrupts the None refcount on this Python; pin an older PySide6"

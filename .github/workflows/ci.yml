@@ -48,45 +48,6 @@ jobs:
         env:
           ATLAS_LOCAL_SRC: ${{ github.workspace }}
         run: bash install.sh
-      - name: Qt diagnostics (offscreen)
-        continue-on-error: true
-        run: |
-          export QT_DEBUG_PLUGINS=1 QT_QPA_PLATFORM=offscreen
-          /root/.local/opt/atlas-library/venv/bin/python -X faulthandler -c "
-          from PySide6.QtWidgets import QApplication
-          import PySide6; print('PySide6', PySide6.__version__)
-          a = QApplication([])
-          print('QApplication OK')" 2>&1 | tail -40
-          ldd --version | head -1; ls /root/.local/opt/atlas-library/venv/lib/python3*/site-packages/PySide6/Qt/plugins/platforms/
-      - name: UI probe (finds the page that crashes)
-        continue-on-error: true
-        run: |
-          QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe.py 2>&1 | tail -60
-      - name: Crash bisection
-        continue-on-error: true
-        run: |
-          for m in no-import main-thread plain-thread single-index-thread qthread coreapp-qthread; do
-            QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe2.py $m > /tmp/p.out 2>&1
-            code=$?
-            echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
-          done
-      - name: PySide6 versions vs None refcount (idle processEvents)
-        continue-on-error: true
-        run: |
-          PY=/root/.local/opt/atlas-library/venv/bin/python
-          $PY -m pip index versions PySide6-Essentials 2>&1 | head -2 | cut -c1-400
-          for v in 6.6.3.1 6.7.3 6.8.3 6.9.3 6.10.2 6.11.0; do
-            rm -rf /tmp/v && $PY -m venv /tmp/v && /tmp/v/bin/pip install -q "PySide6-Essentials==$v" >/dev/null 2>&1 || { echo "PYSIDE $v: not installable"; continue; }
-            xvfb-run -a env QT_QPA_PLATFORM=xcb /tmp/v/bin/python -c "
-          import sys
-          from PySide6.QtWidgets import QApplication
-          import PySide6
-          app = QApplication([])
-          for _ in range(10): app.processEvents()
-          a = sys.getrefcount(None)
-          for _ in range(200): app.processEvents()
-          print('PYSIDE', PySide6.__version__, 'delta per processEvents =', (sys.getrefcount(None) - a) / 200)" 2>&1 | grep PYSIDE || echo "PYSIDE $v: failed to run"
-          done
       - name: Test suite on a real X11 display (Xvfb, xcb platform)
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
