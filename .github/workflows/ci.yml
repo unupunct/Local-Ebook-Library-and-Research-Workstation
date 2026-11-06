@@ -70,11 +70,23 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
-      - name: None-refcount micro probe
+      - name: PySide6 versions vs None refcount (idle processEvents)
         continue-on-error: true
         run: |
           PY=/root/.local/opt/atlas-library/venv/bin/python
-          xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -u scripts/ui_probe5.py 2>&1 | grep -v propagateSize | tail -20
+          $PY -m pip index versions PySide6-Essentials 2>&1 | head -2 | cut -c1-400
+          for v in 6.6.3.1 6.7.3 6.8.3 6.9.3 6.10.2 6.11.0; do
+            rm -rf /tmp/v && $PY -m venv /tmp/v && /tmp/v/bin/pip install -q "PySide6-Essentials==$v" >/dev/null 2>&1 || { echo "PYSIDE $v: not installable"; continue; }
+            xvfb-run -a env QT_QPA_PLATFORM=xcb /tmp/v/bin/python -c "
+          import sys
+          from PySide6.QtWidgets import QApplication
+          import PySide6
+          app = QApplication([])
+          for _ in range(10): app.processEvents()
+          a = sys.getrefcount(None)
+          for _ in range(200): app.processEvents()
+          print('PYSIDE', PySide6.__version__, 'delta per processEvents =', (sys.getrefcount(None) - a) / 200)" 2>&1 | grep PYSIDE || echo "PYSIDE $v: failed to run"
+          done
       - name: Test suite on a real X11 display (Xvfb, xcb platform)
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
