@@ -70,13 +70,14 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
-      - name: Crash bisection by widget
+      - name: Crash hunt with allocator checks
         continue-on-error: true
         run: |
-          for m in "window nav" "window rshut" "window nav rshut" "window pdf" "window pdf rshut" "window epub rshut" "window nav pdf epub rshut"; do
-            QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe3.py $m > /tmp/p.out 2>&1
-            code=$?
-            echo "WIDGET $m exit=$code : $(tail -n 2 /tmp/p.out | paste -sd'|' | cut -c1-150)"
+          PY=/root/.local/opt/atlas-library/venv/bin/python
+          for env in "X=1" "PYTHONMALLOC=malloc" "MALLOC_CHECK_=3 PYTHONMALLOC=malloc" "MALLOC_CHECK_=3"; do
+            echo "##### $env"
+            env $env QT_QPA_PLATFORM=offscreen $PY -X faulthandler -u scripts/ui_probe.py > /tmp/p.out 2>&1
+            echo "exit=$?"; grep -v propagateSizeHints /tmp/p.out | tail -n 14
           done
       - name: Test suite inside the installed environment
         run: |
