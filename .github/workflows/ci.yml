@@ -70,16 +70,17 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
-      - name: UI probe x6 on a real X11 display (xcb) and with the offscreen plugin
+      - name: Crash frequency by scenario (xcb, 8 runs each)
         continue-on-error: true
         run: |
           PY=/root/.local/opt/atlas-library/venv/bin/python
-          x=0; o=0
-          for i in 1 2 3 4 5 6; do
-            xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe.py > /tmp/x.out 2>&1 || x=$((x+1))
-            QT_QPA_PLATFORM=offscreen $PY -X faulthandler -u scripts/ui_probe.py > /tmp/o.out 2>&1 || o=$((o+1))
+          for m in "none" "window noimport" "window" "window nav" "home" "import" "library" "settings noimport"; do
+            c=0
+            for i in 1 2 3 4 5 6 7 8; do
+              xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe3.py $m > /tmp/x.out 2>&1 || c=$((c+1))
+            done
+            echo "FREQ [$m] crashes: $c/8"
           done
-          echo "PROBE crashes: xcb=$x/6 offscreen=$o/6"
       - name: Test suite on a real X11 display (Xvfb, xcb platform)
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
