@@ -70,16 +70,13 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
-      - name: Reader crash check (xcb)
+      - name: None-refcount probe
         continue-on-error: true
         run: |
           PY=/root/.local/opt/atlas-library/venv/bin/python
-          for m in "window pdf rshut" "window epub rshut" "window pdf" "window epub" "window nav pdf epub rshut"; do
-            c=0; last=""
-            for i in 1 2 3 4; do
-              xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe3.py $m > /tmp/x.out 2>&1 || { c=$((c+1)); last=$(grep -m1 "Fatal\|malloc\|free()" /tmp/x.out); }
-            done
-            echo "READER [$m] crashes: $c/4 $last"
+          for k in epub pdf; do
+            echo "##### $k"
+            xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe4.py $k 2>&1 | grep -v propagateSize | tail -32
           done
       - name: Test suite on a real X11 display (Xvfb, xcb platform)
         run: |
