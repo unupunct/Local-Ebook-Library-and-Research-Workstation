@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
         run: |
           ./install.ps1 -Portable
-          & "$env:LOCALAPPDATA\Programs\AtlasLibrary\AtlasLibrary.exe" --selftest "$env:RUNNER_TEMP\selftest.txt"
+          Start-Process -Wait -FilePath "$env:LOCALAPPDATA\Programs\AtlasLibrary\AtlasLibrary.exe" -ArgumentList "--selftest", "$env:RUNNER_TEMP\selftest.txt"
           Get-Content "$env:RUNNER_TEMP\selftest.txt" | Select-Object -Last 1
           if (-not (Select-String -Path "$env:RUNNER_TEMP\selftest.txt" -Pattern "SELFTEST OK")) { throw "self-test failed" }
 
@@ -51,7 +51,7 @@ jobs:
       - name: Test suite inside the installed environment
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
-          QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -m pytest -q
+          QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -X faulthandler -m pytest -v -p no:cacheprovider
       - name: Menu entry is valid
         run: desktop-file-validate /root/.local/share/applications/atlas-library.desktop
       - name: GUI starts on a real X11 display (Xvfb) and stays up

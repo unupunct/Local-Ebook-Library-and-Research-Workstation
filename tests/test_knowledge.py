@@ -176,13 +176,17 @@ def test_cancel_and_resume(env):
     build_bulk(env.books, 24)
     env.lib.add_root(env.books)
     cancel = threading.Event()
-    seen = []
+    imp = env.importer(cancel=cancel)
+    real = imp.index_book
+    calls = []
 
-    def cb(p):
-        seen.append(p.processed)
-        if p.processed >= 5:
-            cancel.set()
-    p = env.importer(progress_cb=cb, cancel=cancel).run()
+    def counting(book_id):
+        calls.append(book_id)
+        if len(calls) >= 5:
+            cancel.set()          # deterministic: cancel after the fifth book, however fast the machine is
+        return real(book_id)
+    imp.index_book = counting
+    p = imp.run()
     assert p.phase == "cancelled"
     pending = env.db.conn.execute("SELECT COUNT(*) FROM books WHERE index_status='pending'").fetchone()[0]
     assert 0 < pending < 24
