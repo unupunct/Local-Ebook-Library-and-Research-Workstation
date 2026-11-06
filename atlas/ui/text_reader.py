@@ -340,12 +340,6 @@ class ReflowView(QTextBrowser):
         self._block_formats()
         self.verticalScrollBar().setValue(0)
 
-    def loadResource(self, type_, name):  # never fetch anything from disk or network
-        from PySide6.QtCore import QVariant
-        if type_ == QTextDocument.ImageResource and name.scheme() == "res":
-            return self.document().resource(type_, name)
-        return None
-
     def _anchor(self, url: QUrl) -> None:
         s = url.toString()
         if s:
