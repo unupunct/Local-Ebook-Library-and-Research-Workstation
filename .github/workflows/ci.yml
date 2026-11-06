@@ -66,8 +66,9 @@ jobs:
         continue-on-error: true
         run: |
           for m in no-import main-thread plain-thread single-index-thread qthread coreapp-qthread; do
-            QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe2.py $m > /tmp/p.out 2>&1; echo "MODE $m exit=$? : $(tail -n 3 /tmp/p.out | tr '
-' '|')"
+            QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe2.py $m > /tmp/p.out 2>&1
+            code=$?
+            echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
       - name: Test suite inside the installed environment
         run: |
