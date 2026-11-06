@@ -70,14 +70,20 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
-      - name: Crash hunt with allocator checks
+      - name: Crash hunt (gdb backtrace)
         continue-on-error: true
         run: |
+          apt-get install -y --no-install-recommends gdb >/dev/null 2>&1 || echo "no gdb"
           PY=/root/.local/opt/atlas-library/venv/bin/python
-          for env in "X=1" "PYTHONMALLOC=malloc" "MALLOC_CHECK_=3 PYTHONMALLOC=malloc" "MALLOC_CHECK_=3"; do
-            echo "##### $env"
-            env $env QT_QPA_PLATFORM=offscreen $PY -X faulthandler -u scripts/ui_probe.py > /tmp/p.out 2>&1
-            echo "exit=$?"; grep -v propagateSizeHints /tmp/p.out | tail -n 14
+          export QT_QPA_PLATFORM=offscreen
+          fails=0
+          for i in 1 2 3 4 5 6; do
+            $PY -X faulthandler -u scripts/ui_probe.py > /tmp/p.out 2>&1 || { fails=$((fails+1)); echo "run $i crashed: $(grep -m1 -i 'malloc\|corrupt\|free()\|double\|Fatal' /tmp/p.out)"; }
+          done
+          echo "plain runs crashed: $fails of 6"
+          for i in 1 2 3 4 5 6; do
+            gdb -q -batch -ex "handle SIGPIPE nostop noprint" -ex run -ex "bt 30" -ex "thread apply all bt 6" --args $PY -u scripts/ui_probe.py > /tmp/g.out 2>&1 || true
+            if grep -q "SIGABRT\|SIGSEGV" /tmp/g.out; then echo "gdb run $i caught a crash:"; grep -v propagateSizeHints /tmp/g.out | grep -A60 "SIGABRT\|SIGSEGV" | cut -c1-200 | head -90; break; fi
           done
       - name: Test suite inside the installed environment
         run: |
