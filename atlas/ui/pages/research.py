@@ -346,7 +346,8 @@ class ResearchPage(QWidget):
         head = ""
         if with_book and b is not None:
             head = self._book_html(b, False) + "<br>"
-        it.setData(0, Qt.UserRole + 1, f"{head}<span style='color:#8b93a1'>{loc}</span>&nbsp; {p.excerpt_html.replace('<b>', '<b style=\"background:#6b5a14;color:#fff\">')}")
+        mark = p.excerpt_html.replace("<b>", '<b style="background:#6b5a14;color:#fff">')
+        it.setData(0, Qt.UserRole + 1, f"{head}<span style='color:#8b93a1'>{loc}</span>&nbsp; {mark}")
         it.setData(0, Qt.UserRole, ("passage", p, p.locator(terms), p.book_id))
 
     # ---------------------------------------------------------------- actions

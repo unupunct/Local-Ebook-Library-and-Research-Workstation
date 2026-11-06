@@ -47,7 +47,7 @@ class CollectionsPage(QWidget):
         self.dups = QTreeWidget(); self.dups.setHeaderLabels(["Book", "Format", "Size", "Path"])
         self.dups.header().setSectionResizeMode(3, QHeaderView.Stretch)
         dl.addWidget(self.dups)
-        dl.addLayout(hbox(button("Find duplicates", self.find_dups, True), button("Show selected in Explorer", self.dup_explorer), None))
+        dl.addLayout(hbox(button("Find duplicates", self.find_dups, True), button(f"Show selected in {__import__('atlas.storage', fromlist=['x']).FILE_MANAGER}", self.dup_explorer), None))
         tabs.addTab(d, "Duplicates")
 
         r = QWidget(); rl2 = QVBoxLayout(r)

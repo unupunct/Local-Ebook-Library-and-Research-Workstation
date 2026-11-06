@@ -64,7 +64,8 @@ def main(argv: list[str] | None = None) -> int:
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(__version__)
     app.setOrganizationName("AtlasLibrary")
-    icon_file = resource_path("assets/atlas.ico")
+    icon_file = resource_path("assets/atlas.ico" if sys.platform == "win32" else "assets/atlas.png")
+    app.setDesktopFileName("atlas-library")
     icon = QIcon(str(icon_file)) if icon_file.exists() else None
     if icon:
         app.setWindowIcon(icon)

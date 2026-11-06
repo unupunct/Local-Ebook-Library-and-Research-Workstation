@@ -291,7 +291,8 @@ class ReflowView(QTextBrowser):
     def apply_prefs(self, p: dict) -> None:
         self.prefs = p
         th = READER_THEMES.get(p.get("theme", "dark"), READER_THEMES["dark"])
-        f = QFont(p.get("font_family", "Georgia"))
+        from .common import SERIF, pick_font
+        f = QFont(pick_font(p.get("font_family", "Georgia"), *SERIF))
         f.setPointSizeF(float(p.get("font_size", 14)))
         self.document().setDefaultFont(f)
         self.setFont(f)

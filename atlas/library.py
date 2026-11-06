@@ -128,6 +128,11 @@ def _escape_like(s: str) -> str:
     return s.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
+def native_rel(rel: str) -> str:
+    """Relative paths written on Windows use backslashes; make them usable on POSIX (and vice versa is harmless)."""
+    return rel.replace("\\", "/") if os.sep == "/" else rel
+
+
 def descendant_tag_ids(db: Database, tag_id: int) -> list[int]:
     rows = db.conn.execute(
         "WITH RECURSIVE d(id) AS (SELECT ? UNION SELECT t.id FROM tags t JOIN d ON t.parent_id=d.id) SELECT id FROM d",
@@ -148,17 +153,17 @@ class Library:
             rk = storage.canonical_key(r["path"])
             if key == rk:
                 raise ValueError(f"This folder is already a library source: {r['path']}")
-            if key.startswith(rk.rstrip("\\") + "\\"):
+            if key.startswith(rk.rstrip("\\/") + os.sep):
                 raise ValueError(f"This folder is inside the existing source '{r['path']}'. Adding it again would index the same books twice.")
-            if rk.startswith(key.rstrip("\\") + "\\"):
+            if rk.startswith(key.rstrip("\\/") + os.sep):
                 raise ValueError(f"The existing source '{r['path']}' is inside this folder. Remove it first, or choose a different folder.")
         serial, vlabel = storage.volume_info(norm)
         with self.db.tx() as c:
             cur = c.execute(
-                "INSERT INTO library_roots(uuid,path,label,recursive,volume_serial,volume_label,kind,online,last_seen)"
-                " VALUES(?,?,?,?,?,?,?,1,datetime('now'))",
+                "INSERT INTO library_roots(uuid,path,label,recursive,volume_serial,volume_label,kind,online,last_seen,mount_rel)"
+                " VALUES(?,?,?,?,?,?,?,1,datetime('now'),?)",
                 (uuid.uuid4().hex, norm, label or os.path.basename(norm.rstrip("\\/")) or norm,
-                 int(recursive), serial, vlabel, storage.kind_of(norm)))
+                 int(recursive), serial, vlabel, storage.kind_of(norm), storage.mount_relative(norm) if serial else None))
             return cur.lastrowid
 
     def roots(self) -> list[sqlite3.Row]:
@@ -202,19 +207,19 @@ class Library:
             online = storage.is_dir_available(path)
             new_path = path
             if not online and r["volume_serial"] and not storage.is_unc(path):
-                drive = storage.find_drive_by_serial(r["volume_serial"])
-                if drive:
-                    cand = storage.rebase_to_drive(path, drive)
-                    if cand != path and storage.is_dir_available(cand):
-                        new_path, online = cand, True
-                        events.append({"root_id": r["id"], "event": "drive_letter_changed", "old": path, "new": cand})
+                # new drive letter (Windows) or new mount point (Linux) for the same volume
+                cand = storage.relocate_candidate(path, r["volume_serial"], r["mount_rel"])
+                if cand and cand != path and storage.is_dir_available(cand):
+                    new_path, online = cand, True
+                    events.append({"root_id": r["id"], "event": "drive_letter_changed", "old": path, "new": cand})
             if online:
                 serial = r["volume_serial"]
                 if not serial:
                     serial, vlabel = storage.volume_info(new_path)
                     if serial:
                         with self.db.tx() as c:
-                            c.execute("UPDATE library_roots SET volume_serial=?, volume_label=? WHERE id=?", (serial, vlabel, r["id"]))
+                            c.execute("UPDATE library_roots SET volume_serial=?, volume_label=?, mount_rel=? WHERE id=?",
+                                      (serial, vlabel, storage.mount_relative(new_path), r["id"]))
             was_online = bool(r["online"])
             with self.db.tx() as c:
                 c.execute("UPDATE library_roots SET path=?, online=?, last_seen=CASE WHEN ? THEN datetime('now') ELSE last_seen END WHERE id=?",
@@ -236,7 +241,7 @@ class Library:
         rows = self.db.conn.execute("SELECT id, rel_path, available FROM books WHERE root_id=?", (root_id,)).fetchall()
         changes: list[tuple[int, int]] = []
         for r in rows:
-            exists = 1 if os.path.isfile(os.path.join(root["path"], r["rel_path"])) else 0
+            exists = 1 if os.path.isfile(os.path.join(root["path"], native_rel(r["rel_path"]))) else 0
             if exists != r["available"]:
                 changes.append((exists, r["id"]))
         if changes:
@@ -250,10 +255,10 @@ class Library:
                 "SELECT r.path, b.rel_path FROM books b JOIN library_roots r ON r.id=b.root_id WHERE b.id=?", (book,)).fetchone()
             if row is None:
                 raise KeyError(book)
-            return os.path.join(row["path"], row["rel_path"])
+            return os.path.join(row["path"], native_rel(row["rel_path"]))
         row = self.db.conn.execute(
             "SELECT r.path FROM library_roots r WHERE r.id=?", (book["root_id"],)).fetchone()
-        return os.path.join(row["path"], book["rel_path"])
+        return os.path.join(row["path"], native_rel(book["rel_path"]))
 
     def is_available(self, book_id: int) -> bool:
         r = self.db.conn.execute("SELECT available FROM books WHERE id=?", (book_id,)).fetchone()
@@ -293,7 +298,7 @@ class Library:
                 "SELECT value FROM book_terms WHERE book_id=? AND kind=? ORDER BY value", (book_id, kind))]
         d["tags"] = [dict(x) for x in c.execute(
             "SELECT t.id, t.name FROM book_tags bt JOIN tags t ON t.id=bt.tag_id WHERE bt.book_id=? ORDER BY t.name", (book_id,))]
-        d["path"] = os.path.join(d["root_path"], d["rel_path"])
+        d["path"] = os.path.join(d["root_path"], native_rel(d["rel_path"]))
         d["collections"] = [dict(x) for x in c.execute(
             "SELECT c.id, c.name FROM collection_books cb JOIN collections c ON c.id=cb.collection_id WHERE cb.book_id=?", (book_id,))]
         return d

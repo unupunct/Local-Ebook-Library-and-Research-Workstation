@@ -1,6 +1,7 @@
 """First-run wizard: books folder, optional external drive, data location, initial indexing."""
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from PySide6.QtWidgets import (QCheckBox, QFileDialog, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout,
@@ -38,7 +39,7 @@ class FirstRunWizard(QWizard):
 
         p2 = QWizardPage(); p2.setTitle("Where are your books?"); p2.setSubTitle("Choose the main folder. Subfolders are included. You may skip this and add sources later.")
         f2 = QFormLayout(p2)
-        self.books = QLineEdit(); self.books.setPlaceholderText("e.g. D:\\Books")
+        self.books = QLineEdit(); self.books.setPlaceholderText("e.g. D:\\Books" if sys.platform == "win32" else "e.g. /home/you/Books")
         self.extra = QLineEdit(); self.extra.setPlaceholderText("optional: a USB drive or second folder")
         f2.addRow("Main books folder", _picker(self.books, self)); f2.addRow("Another folder or external drive", _picker(self.extra, self))
         n = QLabel("External drives may be disconnected later: your library data, notes and reading progress stay available, and the books reconnect when the drive returns.")

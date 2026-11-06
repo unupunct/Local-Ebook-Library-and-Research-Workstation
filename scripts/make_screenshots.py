@@ -44,7 +44,7 @@ pump(500)
 g = ctx.tags.get_or_create_path("Gardening/Permaculture")
 w = ctx.tags.get_or_create_path("Woodworking/Joinery")
 for rel, tag in (("Gardening/Permaculture/food_forest.pdf", g), ("Gardening/Permaculture/soil_book.epub", g), ("Woodworking/Hand Tools/joints.txt", w)):
-    bid = ctx.db.conn.execute("SELECT id FROM books WHERE rel_path=?", (rel.replace("/", "\\"),)).fetchone()[0]
+    bid = ctx.db.conn.execute("SELECT id FROM books WHERE rel_path=?", (rel.replace("/", __import__("os").sep),)).fetchone()[0]
     ctx.tags.add_to_books(tag, [bid])
 cid = ctx.lib.create_collection("Greenhouse project")
 ctx.lib.add_to_collection(cid, [r[0] for r in ctx.db.conn.execute("SELECT id FROM books WHERE format IN ('pdf','epub') LIMIT 3")])

@@ -1,6 +1,6 @@
 ; Inno Setup script (optional). Installs the program to Program Files; user data lives in %LOCALAPPDATA%\AtlasLibrary and is never touched by install/uninstall.
 #ifndef AppVersion
-#define AppVersion "1.1.0"
+#define AppVersion "1.2.0"
 #endif
 [Setup]
 AppName=Atlas Library

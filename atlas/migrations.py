@@ -242,6 +242,10 @@ CREATE TABLE app_state (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '');
 """,
 ]
 
+MAIN_MIGRATIONS.append("""
+ALTER TABLE library_roots ADD COLUMN mount_rel TEXT;
+""")
+
 IDX_MIGRATIONS: list[str] = [
 """
 CREATE TABLE idx.segments (

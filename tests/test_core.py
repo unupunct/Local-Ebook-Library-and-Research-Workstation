@@ -1,6 +1,7 @@
 import os
 import shutil
 import sqlite3
+import sys
 
 import pytest
 
@@ -206,10 +207,12 @@ def test_overlapping_roots_rejected(env, tmp_path):
     env.lib.add_root(tmp_path / "lib")
     with pytest.raises(ValueError):
         env.lib.add_root(tmp_path / "lib" / "sub")
-    with pytest.raises(ValueError):
-        env.lib.add_root(tmp_path / "LIB")
+    if sys.platform == "win32":                      # Windows paths are case-insensitive, POSIX ones are not
+        with pytest.raises(ValueError):
+            env.lib.add_root(tmp_path / "LIB")
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="drive letters are a Windows concept")
 def test_drive_letter_change(env, monkeypatch, tmp_path):
     from atlas import storage
     d = tmp_path / "lib"; d.mkdir()
@@ -364,6 +367,7 @@ def test_scan_retries_flaky_share_and_aborts_when_unreachable(indexed, monkeypat
     assert indexed.lib.count_books() == 12 and indexed.lib.count_books(BookFilter(available=True)) <= before
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="mapped drives are a Windows concept")
 def test_mapped_drive_and_unc_are_the_same_library(env, monkeypatch, tmp_path):
     from atlas import storage
     d = tmp_path / "share"

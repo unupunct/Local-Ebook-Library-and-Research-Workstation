@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows (tests + install.ps1)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Tests
+        run: python -m pytest -q
+      - name: install.ps1 (portable build of the latest published release)
+        shell: pwsh
+        run: |
+          ./install.ps1 -Portable
+          & "$env:LOCALAPPDATA\Programs\AtlasLibrary\AtlasLibrary.exe" --selftest "$env:RUNNER_TEMP\selftest.txt"
+          Get-Content "$env:RUNNER_TEMP\selftest.txt" | Select-Object -Last 1
+          if (-not (Select-String -Path "$env:RUNNER_TEMP\selftest.txt" -Pattern "SELFTEST OK")) { throw "self-test failed" }
+
+  linux:
+    name: Linux (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["debian:12", "debian:13", "ubuntu:24.04", "parrotsec/core:6", "parrotsec/core:latest"]
+    container:
+      image: ${{ matrix.image }}
+    env:
+      HOME: /root
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Prerequisites for the checkout action and the GUI test
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates curl xvfb xauth desktop-file-utils
+      - uses: actions/checkout@v4
+      - name: Install with install.sh (from this checkout)
+        env:
+          ATLAS_LOCAL_SRC: ${{ github.workspace }}
+        run: bash install.sh
+      - name: Test suite inside the installed environment
+        run: |
+          /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
+          QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -m pytest -q
+      - name: Menu entry is valid
+        run: desktop-file-validate /root/.local/share/applications/atlas-library.desktop
+      - name: GUI starts on a real X11 display (Xvfb) and stays up
+        run: |
+          mkdir -p /tmp/atlas-data && echo '{"first_run_done": true}' > /tmp/atlas-data/settings.json
+          export ATLAS_DATA_DIR=/tmp/atlas-data PATH="/root/.local/bin:$PATH"
+          xvfb-run -a sh -c 'atlas-library & pid=$!; sleep 15; if kill -0 $pid 2>/dev/null; then echo "GUI is running"; kill $pid; else wait $pid; echo "GUI exited early"; exit 1; fi'
+          ls -la /tmp/atlas-data/db /tmp/atlas-data/logs
+      - name: Uninstall keeps the data
+        run: |
+          bash install.sh --uninstall
+          test ! -e /root/.local/bin/atlas-library
+          test -d /tmp/atlas-data/db
+
+  one-liner:
+    name: One-line install (${{ matrix.image }})
+    needs: linux
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["debian:12", "parrotsec/core:6", "parrotsec/core:latest"]
+    container:
+      image: ${{ matrix.image }}
+    env:
+      HOME: /root
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Run the documented command (pinned to this commit)
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+          curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash -s -- --ref "${{ github.sha }}"
+          /root/.local/bin/atlas-library --selftest /tmp/report.txt && tail -n 1 /tmp/report.txt

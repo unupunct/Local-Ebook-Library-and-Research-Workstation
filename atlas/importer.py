@@ -22,7 +22,7 @@ from typing import Callable, Iterator
 from . import storage
 from .covers import save_thumbnail
 from .formats import format_for, planned_extensions
-from .library import Library
+from .library import Library, native_rel
 from .parsers import parse_file
 from .parsers.base import ParseError
 from .settings import Settings
@@ -199,7 +199,7 @@ class Importer:
         s = self.settings
         c = self.db.conn
         rid, rpath = root["id"], root["path"]
-        existing = {r["rel_path"]: r for r in c.execute(
+        existing = {native_rel(r["rel_path"]): r for r in c.execute(
             "SELECT id, rel_path, size, mtime, available, index_status, fingerprint FROM books WHERE root_id=?", (rid,))}
         seen: set[int] = set()
         planned = planned_extensions()
@@ -246,7 +246,7 @@ class Importer:
                         for cand in c.execute(
                                 "SELECT b.id, r.path AS rpath, b.rel_path FROM books b JOIN library_roots r ON r.id=b.root_id "
                                 "WHERE b.fingerprint=? AND b.size=? AND b.format=?", (fp, size, info.key)).fetchall():
-                            if not os.path.exists(os.path.join(cand["rpath"], cand["rel_path"])):
+                            if not os.path.exists(os.path.join(cand["rpath"], native_rel(cand["rel_path"]))):
                                 moved = cand
                                 break
                         if moved:

@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 import uuid
 from typing import Any, Sequence
 
 from .db import Database
+from .library import native_rel
 
 WIKILINK = re.compile(r"\[\[([^\[\]|]{1,200}?)\]\]")
 
@@ -32,7 +34,7 @@ class Research:
             if b is None:
                 raise KeyError(book_id)
             buuid, title, authors = b["uuid"], b["title"], b["author_sort"]
-            path = b["rp"].rstrip("\\/") + "\\" + b["rel_path"]
+            path = os.path.join(b["rp"], native_rel(b["rel_path"]))
         loc_type = locator.get("type", "")
         loc_num = locator.get("num")
         if loc_type == "page" and loc_num is None:

@@ -1,6 +1,6 @@
 # Atlas Library
 
-A local ebook library and research workstation for Windows 10/11. Import folders of PDF, EPUB, MOBI, TXT, Markdown, HTML, DOCX and RTF files; search every word across the whole library (offline, SQLite FTS5); read in the built-in readers; save passages as research clippings and organise them in a notebook. No account, subscription, cloud or AI service is needed.
+A local ebook library and research workstation for **Windows 10/11 and Linux** (ParrotOS, Debian, Ubuntu and other distributions). Import folders of PDF, EPUB, MOBI, TXT, Markdown, HTML, DOCX and RTF files; search every word across the whole library (offline, SQLite FTS5); read in the built-in readers; save passages as research clippings and organise them in a notebook. No account, subscription, cloud or AI service is needed.
 
 ![Research mode](docs/images/research.png)
 
@@ -16,17 +16,31 @@ A local ebook library and research workstation for Windows 10/11. Import folders
 
 ## Install and run
 
-Download from the [Releases](../../releases) page:
+### Linux (ParrotOS, Debian, Ubuntu, Kali …) — one line
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/unupunct/Local-Ebook-Library-and-Research-Workstation/main/install.sh | bash
+```
+
+Installs the Qt libraries with apt, sets up an isolated Python environment under `~/.local/opt/atlas-library`, adds the `atlas-library` command and an application-menu entry, and runs a self-test. Re-run it to update; add `| bash -s -- --uninstall` to remove it (your library data is kept). Details, options and troubleshooting: [docs/LINUX.md](docs/LINUX.md).
+
+### Windows — one line (PowerShell)
+
+```powershell
+irm https://raw.githubusercontent.com/unupunct/Local-Ebook-Library-and-Research-Workstation/main/install.ps1 | iex
+```
+
+Downloads the newest installer from the [Releases](../../releases) page and runs it. Or download it yourself:
 * **`AtlasLibrary-Setup-<version>.exe`** – installer (per-user by default, no admin rights needed), or
 * **`AtlasLibrary-<version>-portable.zip`** – unzip anywhere and run `AtlasLibrary.exe`.
 
 Both are unsigned, so Windows SmartScreen may warn on first start (*More info → Run anyway*). The first-run wizard asks for your books folder, an optional second folder/USB drive, the data location, and whether to index now (you can postpone).
 
-**From source** (Python 3.12+):
+**From source** (Python 3.10+, Windows or Linux):
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python -m pip install -r requirements-dev.txt
+.\.venv\Scripts\python -m pip install -r requirements-dev.txt     # Linux: .venv/bin/python
 .\.venv\Scripts\python -m atlas
 ```
 
@@ -49,7 +63,7 @@ python -m venv .venv
 | Tags and Categories | nested tags (drag to move), merge/rename/delete, auto-tag rules that only *suggest* until you confirm |
 | Settings | locations, readers, search, indexing exclusions and schedule, OCR, backups, optional online metadata lookup, semantic search |
 
-Shortcuts: `Ctrl+E` global search · `Ctrl+1…0` screens · `Ctrl+B` sidebar · `Ctrl+F` find in book · `Ctrl+D` bookmark · `Ctrl+K` clip selection · `Alt+←/→` page/chapter · `F11` full screen · `Ctrl+Shift+F` distraction-free · `Esc` leave.
+Shortcuts (Linux/Windows): `Ctrl+E` global search · `Ctrl+1…0` screens · `Ctrl+B` sidebar · `Ctrl+F` find in book · `Ctrl+D` bookmark · `Ctrl+K` clip selection · `Alt+←/→` page/chapter · `F11` full screen · `Ctrl+Shift+F` distraction-free · `Esc` leave.
 
 ## Formats
 
@@ -59,7 +73,7 @@ PDF, EPUB, MOBI/PRC/AZW (unencrypted MOBI6; AZW3/KF8 best-effort), TXT, Markdown
 See [docs/BACKUP_AND_RESTORE.md](docs/BACKUP_AND_RESTORE.md). In short: the installation folder holds only the program; `%LOCALAPPDATA%\AtlasLibrary` holds `settings.json`, `db\atlas.db` (irreplaceable), `db\index.db` (rebuildable), `cache`, `ocr`, `logs`, `backups`; **your books are backed up by you, separately.** To update, install the new version over the old one; the database migrates automatically.
 
 ## More documentation
-[Architecture and deviations](docs/ARCHITECTURE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Semantic search](docs/SEMANTIC_SEARCH.md) · [Project status and known limitations](STATUS.md) · [Changelog](CHANGELOG.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)
+[Linux guide](docs/LINUX.md) · [Architecture and deviations](docs/ARCHITECTURE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Semantic search](docs/SEMANTIC_SEARCH.md) · [Project status and known limitations](STATUS.md) · [Changelog](CHANGELOG.md) · [Release checklist](docs/RELEASE_CHECKLIST.md)
 
 ## Licensing note
 No license file has been chosen yet. The application depends on **PyMuPDF (AGPL-3.0 / commercial)** and **PySide6 (LGPL-3.0)**, among others; anyone redistributing builds should review those licenses and pick a compatible license for this project.

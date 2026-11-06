@@ -50,7 +50,7 @@ class Settings:
     history_limit: int = 100
     # indexing
     index_threads: int = 2
-    exclude_dirs: list[str] = field(default_factory=lambda: ["$RECYCLE.BIN", "System Volume Information", "node_modules", ".git"])
+    exclude_dirs: list[str] = field(default_factory=lambda: ["$RECYCLE.BIN", "System Volume Information", "node_modules", ".git", "lost+found", ".Trash-*", ".Trash", "@eaDir"])
     exclude_patterns: list[str] = field(default_factory=lambda: ["~$*", "*.tmp", "*.part", "*.crdownload", "Thumbs.db"])
     skip_hidden: bool = True
     resume_on_start: bool = True

@@ -25,7 +25,7 @@ def palette(name: str) -> dict[str, str]:
 def stylesheet(name: str = "dark") -> str:
     c = palette(name)
     return f"""
-* {{ font-family: "Segoe UI", sans-serif; font-size: 10pt; }}
+* {{ font-family: "Segoe UI", "Noto Sans", "DejaVu Sans", "Ubuntu", "Cantarell", sans-serif; font-size: 10pt; }}
 QMainWindow, QDialog, QWizard {{ background: {c['bg']}; color: {c['text']}; }}
 QWidget {{ color: {c['text']}; }}
 QWidget#page, QStackedWidget {{ background: {c['bg']}; }}

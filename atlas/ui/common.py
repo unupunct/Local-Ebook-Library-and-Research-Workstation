@@ -11,6 +11,25 @@ from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QMessageBox, QPushBu
                                QVBoxLayout, QWidget)
 
 
+_FAMILIES: set[str] | None = None
+
+
+def pick_font(*candidates: str) -> str:
+    """First installed font family among the candidates (fonts differ between Windows and Linux)."""
+    global _FAMILIES
+    if _FAMILIES is None:
+        from PySide6.QtGui import QFontDatabase
+        _FAMILIES = {f.lower() for f in QFontDatabase.families()}
+    for c in candidates:
+        if c.lower() in _FAMILIES:
+            return c
+    return candidates[0]
+
+
+SERIF = ("Georgia", "Noto Serif", "DejaVu Serif", "Liberation Serif", "Times New Roman")
+SANS = ("Segoe UI", "Noto Sans", "DejaVu Sans", "Liberation Sans", "Ubuntu")
+
+
 def human_size(n: int) -> str:
     f = float(n)
     for unit in ("B", "KB", "MB", "GB", "TB"):
@@ -159,13 +178,13 @@ def fallback_cover(title: str, authors: str, size: tuple[int, int]) -> QPixmap:
     p.setRenderHint(QPainter.Antialiasing)
     p.fillRect(0, 0, w, max(4, ht // 40), base.lighter(150))
     p.setPen(QColor("#f1f1f1"))
-    f = QFont("Georgia")
+    f = QFont(pick_font(*SERIF))
     f.setPixelSize(max(9, w // 9))
     f.setBold(True)
     p.setFont(f)
     margin = w * 0.1
     p.drawText(QRectF(margin, ht * 0.12, w - 2 * margin, ht * 0.6), Qt.AlignHCenter | Qt.AlignTop | Qt.TextWordWrap, title[:90])
-    f2 = QFont("Segoe UI")
+    f2 = QFont(pick_font(*SANS))
     f2.setPixelSize(max(8, w // 12))
     p.setFont(f2)
     p.setPen(QColor("#dddddd"))

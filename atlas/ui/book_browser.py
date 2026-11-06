@@ -338,7 +338,7 @@ class BookBrowser(QWidget):
         a = m.addAction("Open in reader"); a.setEnabled(one and bool(book and book["available"]))
         a.triggered.connect(lambda: self.activated.emit(ids[0]))
         m.addSeparator()
-        m.addAction("Show in Explorer").triggered.connect(self.show_in_explorer)
+        m.addAction(f"Show in {storage.FILE_MANAGER}").triggered.connect(self.show_in_explorer)
         m.addAction("Copy file path").triggered.connect(self.copy_path)
         m.addSeparator()
         m.addAction("Toggle favourite").triggered.connect(self.toggle_favorite)

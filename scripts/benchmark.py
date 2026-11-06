@@ -16,6 +16,10 @@ from atlas.testdata import build_bulk
 
 
 def peak_rss_mb() -> float:
+    if sys.platform != "win32":
+        import resource
+        r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss      # KiB on Linux
+        return r / 1024
     class PMC(ctypes.Structure):
         _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD), ("PeakWorkingSetSize", ctypes.c_size_t),
                     ("WorkingSetSize", ctypes.c_size_t), ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t),
