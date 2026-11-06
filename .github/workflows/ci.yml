@@ -90,3 +90,25 @@ jobs:
           apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
           curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.sha }}/install.sh" | bash -s -- --ref "${{ github.sha }}"
           /root/.local/bin/atlas-library --selftest /tmp/report.txt && tail -n 1 /tmp/report.txt
+
+  linux-screenshots:
+    name: Screenshots on ParrotOS (Xvfb)
+    needs: linux
+    runs-on: ubuntu-latest
+    container:
+      image: parrotsec/core:latest
+    env:
+      HOME: /root
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - run: apt-get update && apt-get install -y --no-install-recommends git ca-certificates curl xvfb xauth
+      - uses: actions/checkout@v4
+      - run: ATLAS_LOCAL_SRC="$GITHUB_WORKSPACE" bash install.sh
+      - name: Take the screenshots from the real GUI
+        run: |
+          mkdir -p out
+          xvfb-run -a -s "-screen 0 1600x1000x24" env QT_QPA_PLATFORM=xcb /root/.local/opt/atlas-library/venv/bin/python scripts/make_screenshots.py out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parrot-screenshots
+          path: out/*.png
