@@ -74,7 +74,7 @@ jobs:
         continue-on-error: true
         run: |
           PY=/root/.local/opt/atlas-library/venv/bin/python
-          for m in "none" "window noimport" "window" "window nav" "home" "import" "library" "settings noimport"; do
+          for m in "window rshut" "window nav rshut" "window noimport nav rshut" "window pdf rshut" "window epub rshut"; do
             c=0
             for i in 1 2 3 4 5 6 7 8; do
               xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe3.py $m > /tmp/x.out 2>&1 || c=$((c+1))
