@@ -70,17 +70,13 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
-      - name: Crash frequency by scenario (xcb, 8 runs each)
+      - name: Backtrace of the deterministic crash (epub open + reader shutdown)
         continue-on-error: true
         run: |
+          apt-get install -y --no-install-recommends gdb >/dev/null 2>&1 || echo "no gdb"
           PY=/root/.local/opt/atlas-library/venv/bin/python
-          for m in "window rshut" "window nav rshut" "window noimport nav rshut" "window pdf rshut" "window epub rshut"; do
-            c=0
-            for i in 1 2 3 4 5 6 7 8; do
-              xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe3.py $m > /tmp/x.out 2>&1 || c=$((c+1))
-            done
-            echo "FREQ [$m] crashes: $c/8"
-          done
+          xvfb-run -a env QT_QPA_PLATFORM=xcb $PY -X faulthandler -u scripts/ui_probe3.py window epub rshut 2>&1 | grep -v propagateSize | tail -25
+          xvfb-run -a env QT_QPA_PLATFORM=xcb gdb -q -batch -ex "handle SIGPIPE nostop noprint" -ex run -ex "bt 35" --args $PY -u scripts/ui_probe3.py window epub rshut 2>&1 | grep -v propagateSize | grep -A45 "SIGABRT\|SIGSEGV" | cut -c1-210 | head -60
       - name: Test suite on a real X11 display (Xvfb, xcb platform)
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
