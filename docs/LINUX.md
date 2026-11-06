@@ -27,15 +27,21 @@ curl -fsSL https://raw.githubusercontent.com/unupunct/Local-Ebook-Library-and-Re
 
 ## Supported systems
 
-| System | Python | Status |
+What the automated checks (GitHub Actions, every push) actually cover:
+
+| System | Python | Checked |
 |---|---|---|
-| ParrotOS 6 (Debian 12) and 7 (Debian 13), x86_64 | 3.11 / 3.13 | installed, test suite and GUI start-up checked in CI on the official `parrotsec/core` images |
-| Debian 12 / 13, Ubuntu 24.04, x86_64 | 3.11 / 3.13 / 3.12 | same checks in CI |
+| **ParrotOS 7** (official `parrotsec/core` image, Debian 13 based), x86_64 | 3.13 | the one-line command, the full test suite on a real X11 display (Xvfb) and with Qt's offscreen platform, the GUI starting and staying up, menu entry validation, uninstall, and screenshots rendered from the running app |
+| **Debian 12** (= the base of ParrotOS 6), x86_64 | 3.11 | the same checks |
+| Debian 13, Ubuntu 24.04, x86_64 | 3.13 / 3.12 | the same checks (without the one-line job) |
+| ParrotOS 6 | 3.11 | **not tested directly** – the `parrotsec/core:6` image's apt repositories lack the Debian base packages, so nothing can be installed in it; Debian 12 has the same Python and libraries |
 | Kali, Linux Mint, other apt-based | 3.10 or newer | expected to work (same package names); not checked |
 | Fedora, Arch, openSUSE … | 3.10 or newer | the installer prints the package names to install, then continues; not checked |
-| ARM64 (aarch64) | – | the PySide6 wheel for ARM needs glibc ≥ 2.39 (newer than Debian 12 / Parrot 6); **not checked** |
+| ARM64 (aarch64) | – | PySide6 wheels for ARM need glibc ≥ 2.39 (newer than Debian 12 / Parrot 6); **not checked** |
 
-CI runs headless (offscreen plus an Xvfb X11 display). It cannot show whether the window *looks* right on your desktop, so please report visual problems.
+CI runs headless (Xvfb), so it cannot tell whether the window looks right on *your* desktop, with *your* theme, scaling or Wayland compositor — please report visual problems.
+
+**Python 3.11 note:** PySide6 6.12.0 has a reference-counting bug on Python older than 3.12 (it decrements `None` on every call and the process aborts after some minutes of use — found by this project's CI on Debian 12). `requirements.txt` therefore pins PySide6 below 6.12 on Python < 3.12, and a test (`test_pyside6_does_not_corrupt_none_refcount`) guards against it.
 
 ## Where things are
 

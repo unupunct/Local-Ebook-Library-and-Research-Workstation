@@ -1,12 +1,16 @@
-# Project status — Atlas Library 1.1.0
+# Project status — Atlas Library 1.2.0
 
 _Last updated 2026-10-30. Everything below was run on the development machine (Windows 11, Python 3.13, PySide6 6.12, PyMuPDF 1.28)._
 
 ## Phases
-All seven phases of the original brief are implemented (foundation, library, search, reading, research, reliability, delivery). Version 1.1.0 adds: faster search, safer-CSS EPUB rendering, MOBI/AZW support, an optional semantic-search layer, network-share hardening, installer + signing scripts, and several UI improvements (see CHANGELOG.md).
+All seven phases of the original brief are implemented (foundation, library, search, reading, research, reliability, delivery). Version 1.2.0 adds Linux support (ParrotOS/Debian/Ubuntu) with one-line installers and CI on both platforms (see docs/LINUX.md). Version 1.1.0 added: faster search, safer-CSS EPUB rendering, MOBI/AZW support, an optional semantic-search layer, network-share hardening, installer + signing scripts, and several UI improvements (see CHANGELOG.md).
+
+## Linux / ParrotOS (verified by CI, not by hand)
+* GitHub Actions runs on every push: Windows (tests + `install.ps1`), and Linux containers Debian 12 (Python 3.11), Debian 13, Ubuntu 24.04 and **ParrotOS 7** (official `parrotsec/core` image): `install.sh` from the checkout, the full test suite on Xvfb (xcb) and offscreen, GUI start-up on X11, `.desktop` validation, uninstall that keeps data; plus the literal one-line `curl | bash` on Debian 12 and ParrotOS 7, and screenshots rendered on ParrotOS (in the README).
+* **Not verified:** ParrotOS 6 itself (its container image cannot install packages; Debian 12 stands in), ARM64, other distributions, real hardware, Wayland, HiDPI, and how the app *feels* on a real Linux desktop. Nobody has used it interactively on Linux yet.
 
 ## Test results (actual)
-`pytest -q` → **65 passed, 1 skipped** (the skipped test runs real OCR and needs Tesseract, which is not installed here).
+`pytest -q` → **Windows (dev machine): 75 passed, 1 skipped** (OCR test needs Tesseract) · **Linux CI (Debian 12 and ParrotOS 7): 69 passed, 5 skipped** (the Windows-only drive-letter/mapped-drive tests, the numpy-based semantic tests and the OCR test are skipped there).
 * `tests/test_core.py` — nested import, re-import without duplicates, PDF page and EPUB chapter references, phrases/AND/OR/NOT/prefix, filters + query, excerpt highlighting (prefix, diacritics, negation), malformed/unsupported/scanned files, offline roots + reconnect, moved/deleted/changed files, duplicates, overlapping roots, drive-letter change (**simulated** by patching the Windows volume lookup), mapped-drive/UNC identity (**simulated**), flaky-share retry and unreachable-source abort (**simulated** by patching `os.scandir`), tags, auto-tag suggestions, bulk edit, collections, Romanian diacritics, query-syntax errors, separate index file, in-place index upgrade (seg_meta backfill).
 * `tests/test_knowledge.py` — progress, annotations (incl. invalidation after the source changes), clippings surviving offline/forgotten books, topics/backlinks, exports, backup + restore, pruning, index check + repair, cancel/resume, concurrent indexing, read latency during indexing, OCR-unavailable message, Open Library parsing.
 * `tests/test_mobi.py` — PalmDOC decompression (incl. back-references), MOBI metadata/chapters/cover/Unicode, DRM and Huffman files reported, truncated/garbage files, import → search → reader.

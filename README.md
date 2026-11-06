@@ -12,7 +12,13 @@ A local ebook library and research workstation for **Windows 10/11 and Linux** (
 |---|---|---|
 | ![Library](docs/images/library.png) | ![PDF reader](docs/images/reader-pdf.png) | ![EPUB reader](docs/images/reader-epub.png) |
 
-(The screenshots use a small synthetic test collection.)
+On ParrotOS (screenshots rendered by the CI on the official `parrotsec/core` image under X11):
+
+| Research on ParrotOS | Library on ParrotOS |
+|---|---|
+| ![Research on ParrotOS](docs/images/linux-research.png) | ![Library on ParrotOS](docs/images/linux-library.png) |
+
+(All screenshots use a small synthetic test collection.)
 
 ## Install and run
 

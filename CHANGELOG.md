@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+* **Linux support (ParrotOS, Debian, Ubuntu, Kali …).** One-line installer (`install.sh`: apt libraries, isolated venv, `atlas-library` command, application-menu entry, self-test, update, uninstall) and a one-line Windows installer (`install.ps1`). See docs/LINUX.md.
+* Platform layer: XDG data directory, volumes tracked by UUID and re-found after a re-mount, network mounts (CIFS/NFS/sshfs) recognised, `xdg-open` for "show in file manager", font fallbacks, POSIX-safe relative paths (databases written on Windows work on Linux).
+* GitHub Actions CI on Windows and Linux (Debian 12/13, Ubuntu 24.04, ParrotOS 7), including the real one-line install and the GUI on an X11 display.
+* Fixes found by the Linux CI: PySide6 pinned below 6.12 on Python < 3.12 (process abort after minutes of use), a Python-3.11-incompatible f-string, a timing-dependent test.
+* PySide6-Essentials instead of the full PySide6 meta-package (smaller download).
+
 ## 1.1.0
 * **Faster search:** one single-pass query over a narrow location table (`seg_meta`, added by an automatic index migration), excerpts and highlights generated in Python instead of FTS5 `snippet()`. On the 2,000-document benchmark worst-case queries went from 0.3–1.3 s to roughly 0.1–0.2 s.
 * **Better EPUB/HTML rendering:** book stylesheets are reduced to a safe subset (alignment, indents, margins, emphasis, borders) so books keep their paragraph styling; colours, fonts, backgrounds and anything that loads resources are dropped. Large images are scaled to the reading width.
