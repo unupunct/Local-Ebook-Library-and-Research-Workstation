@@ -26,13 +26,15 @@ jobs:
           Get-Content "$env:RUNNER_TEMP\selftest.txt" | Select-Object -Last 1
           if (-not (Select-String -Path "$env:RUNNER_TEMP\selftest.txt" -Pattern "SELFTEST OK")) { throw "self-test failed" }
 
+  # parrotsec/core:6 (Parrot 6) is not in the matrix: its apt repositories in that image lack the Debian base packages,
+  # so nothing can be installed there. Parrot 6 is Debian 12, which is covered by the debian:12 job (same Python 3.11 / glibc 2.36).
   linux:
     name: Linux (${{ matrix.image }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        image: ["debian:12", "debian:13", "ubuntu:24.04", "parrotsec/core:6", "parrotsec/core:latest"]
+        image: ["debian:12", "debian:13", "ubuntu:24.04", "parrotsec/core:latest"]
     container:
       image: ${{ matrix.image }}
     env:
@@ -76,7 +78,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: ["debian:12", "parrotsec/core:6", "parrotsec/core:latest"]
+        image: ["debian:12", "parrotsec/core:latest"]
     container:
       image: ${{ matrix.image }}
     env:
