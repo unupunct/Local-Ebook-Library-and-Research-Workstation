@@ -48,6 +48,16 @@ jobs:
         env:
           ATLAS_LOCAL_SRC: ${{ github.workspace }}
         run: bash install.sh
+      - name: Qt diagnostics (offscreen)
+        continue-on-error: true
+        run: |
+          export QT_DEBUG_PLUGINS=1 QT_QPA_PLATFORM=offscreen
+          /root/.local/opt/atlas-library/venv/bin/python -X faulthandler -c "
+          from PySide6.QtWidgets import QApplication
+          import PySide6; print('PySide6', PySide6.__version__)
+          a = QApplication([])
+          print('QApplication OK')" 2>&1 | tail -40
+          ldd --version | head -1; ls /root/.local/opt/atlas-library/venv/lib/python3*/site-packages/PySide6/Qt/plugins/platforms/
       - name: Test suite inside the installed environment
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
