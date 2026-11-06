@@ -58,6 +58,10 @@ jobs:
           a = QApplication([])
           print('QApplication OK')" 2>&1 | tail -40
           ldd --version | head -1; ls /root/.local/opt/atlas-library/venv/lib/python3*/site-packages/PySide6/Qt/plugins/platforms/
+      - name: UI probe (finds the page that crashes)
+        continue-on-error: true
+        run: |
+          QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe.py 2>&1 | tail -60
       - name: Test suite inside the installed environment
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
