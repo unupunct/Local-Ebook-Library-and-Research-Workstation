@@ -73,7 +73,7 @@ jobs:
       - name: Crash bisection by widget
         continue-on-error: true
         run: |
-          for m in none window home library research reader collections notes history import tags settings "window noimport" "library noimport"; do
+          for m in "window nav" "window rshut" "window nav rshut" "window pdf" "window pdf rshut" "window epub rshut" "window nav pdf epub rshut"; do
             QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe3.py $m > /tmp/p.out 2>&1
             code=$?
             echo "WIDGET $m exit=$code : $(tail -n 2 /tmp/p.out | paste -sd'|' | cut -c1-150)"

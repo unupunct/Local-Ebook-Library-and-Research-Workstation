@@ -56,8 +56,26 @@ if do_import:
         app.processEvents()
         time.sleep(0.005)
     app.processEvents()
-if what == "window" or what == "reader":
-    pass
+if "nav" in sys.argv and what == "window":
+    from atlas.ui.main_window import NAV
+    for i in range(len(NAV)):
+        w.nav.setCurrentRow(i)
+        app.processEvents()
+if "pdf" in sys.argv and what == "window":
+    bid = ctx.db.conn.execute("SELECT id FROM books WHERE format='pdf' AND title='Food Forest Handbook'").fetchone()[0]
+    ctx.open_book(bid, {"type": "page", "num": 2, "terms": ["tomatoes"]})
+    end = time.time() + 1.5
+    while time.time() < end:
+        app.processEvents()
+if "epub" in sys.argv and what == "window":
+    bid = ctx.db.conn.execute("SELECT id FROM books WHERE format='epub'").fetchone()[0]
+    ctx.open_book(bid, {"type": "chapter", "num": 1})
+    end = time.time() + 1.0
+    while time.time() < end:
+        app.processEvents()
+if "rshut" in sys.argv and what == "window":
+    w.pages["reader"].shutdown()
+print("before ctx.shutdown", flush=True)
 ctx.shutdown()
 if w is not None:
     w.deleteLater()
