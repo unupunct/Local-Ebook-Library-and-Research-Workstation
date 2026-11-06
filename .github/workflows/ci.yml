@@ -70,6 +70,14 @@ jobs:
             code=$?
             echo "MODE $m exit=$code : $(tail -n 3 /tmp/p.out | paste -sd'|')"
           done
+      - name: Crash bisection by widget
+        continue-on-error: true
+        run: |
+          for m in none window home library research reader collections notes history import tags settings "window noimport" "library noimport"; do
+            QT_QPA_PLATFORM=offscreen /root/.local/opt/atlas-library/venv/bin/python -u scripts/ui_probe3.py $m > /tmp/p.out 2>&1
+            code=$?
+            echo "WIDGET $m exit=$code : $(tail -n 2 /tmp/p.out | paste -sd'|' | cut -c1-150)"
+          done
       - name: Test suite inside the installed environment
         run: |
           /root/.local/opt/atlas-library/venv/bin/python -m pip install --quiet pytest pytest-qt
