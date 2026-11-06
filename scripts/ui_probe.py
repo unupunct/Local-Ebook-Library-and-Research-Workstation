@@ -40,3 +40,29 @@ win = MainWindow(ctx)
 win.show()
 app.processEvents()
 print("done", flush=True)
+
+# ---- second phase: the same flow as the UI test fixture (background import with the window open)
+import time
+from atlas.testdata import build_collection
+books = tmp / "books"
+build_collection(books)
+print("collection built", flush=True)
+ctx.lib.add_root(books)
+ctx.start_import("scan")
+print("import started", flush=True)
+t0 = time.time()
+while ctx.importing and time.time() - t0 < 120:
+    app.processEvents()
+    time.sleep(0.005)
+print("import finished", flush=True)
+for i in range(len(NAV)):
+    win.nav.setCurrentRow(i)
+    app.processEvents()
+    print("page", NAV[i][0], flush=True)
+win.pages["reader"].shutdown()
+print("reader shutdown", flush=True)
+ctx.shutdown()
+print("ctx shutdown", flush=True)
+win.deleteLater()
+app.processEvents()
+print("ALL DONE", flush=True)
